@@ -1,4 +1,4 @@
-const pixelDensity = 20;
+const pixelDensity = 4;
 let nbX, nbY = 0;
 
 let grid = [];
@@ -14,7 +14,7 @@ function setup() {
     resetGrid();
     displayGrid();
 
-    frameRate(10);
+    frameRate(30);
 }
 
 function windowResized() {
@@ -38,6 +38,11 @@ function resetGrid() {
     }
 
     gameOfLife.setGrid(grid);
+}
+
+function deepCopy2DArray(array) {
+    // Use map to create a new array with new inner arrays
+    return array.map(row => row.slice());
 }
 
 function loadPattern(patternNumber) {
@@ -95,6 +100,20 @@ function loadPattern(patternNumber) {
             gameOfLife.updateCell(37, 5, 1);
             gameOfLife.updateCell(37, 4, 1);
             break;
+        case 2:
+            let = middleX = Math.round(nbX / 2);
+
+            for (let y = 0; y < nbY; y++) {
+                gameOfLife.updateCell(middleX, y, 1);
+            }
+            break;
+        case 3:
+            let = middleY = Math.round(nbY / 2);
+
+            for (let x = 0; x < nbX; x++) {
+                gameOfLife.updateCell(x, middleY, 1);
+            }
+            break;
     }
 }
 
@@ -113,9 +132,10 @@ function handleMouseAction() {
     let mx = parseCoord(mouseX);
     let my = parseCoord(mouseY);
 
+    let oldGrid = deepCopy2DArray(gameOfLife.grid);
     let isChange = gameOfLife.updateCell(mx, my, mouseButton == "left" ? 1 : -1);
 
-    if (isChange) displayGrid();
+    if (isChange) displayGrid(oldGrid);
 }
 
 function parseCoord(val) {
@@ -123,7 +143,7 @@ function parseCoord(val) {
 }
 
 function keyPressed() {
-    // console.log(key);
+    let oldGrid = null;
 
     switch (key) {
         case 'Enter':
@@ -134,13 +154,17 @@ function keyPressed() {
             pause = false;
             break;
         case 'Backspace':
+            oldGrid = deepCopy2DArray(gameOfLife.grid);
             resetGrid();
-            displayGrid();
+            displayGrid(oldGrid);
             break;
         case '1':
+        case '2':
+        case '3':
             pause = true;
-            loadPattern(1);
-            displayGrid();
+            oldGrid = deepCopy2DArray(gameOfLife.grid);
+            loadPattern(parseInt(key));
+            displayGrid(oldGrid);
             break;
         case 'c':
             console.log(grid);
@@ -155,18 +179,23 @@ function draw() {
 }
 
 function gameIteration() {
+    let oldGrid = deepCopy2DArray(gameOfLife.grid);
     gameOfLife.calculateNextState();
-    displayGrid();
+    displayGrid(oldGrid);
 }
 
-function displayGrid() {
-    strokeWeight(0.1);
-    stroke(80)
+function displayGrid(oldGrid = null) {
+    // strokeWeight(0.1);
+    // stroke(80);
+    noStroke();
     for (let x = 0; x < gameOfLife.grid.length; x++) {
         for (let y = 0; y < gameOfLife.grid[x].length; y++) {
-            let color = gameOfLife.grid[x][y] == 1 ? 0 : 200;
-            fill(color);
-            rect(x * pixelDensity, y * pixelDensity, pixelDensity, pixelDensity);
+            if (!oldGrid || oldGrid[x][y] != gameOfLife.grid[x][y]) {
+                if (oldGrid) console.log("draw");
+                let color = gameOfLife.grid[x][y] == 1 ? 220 : 0;
+                fill(color);
+                rect(x * pixelDensity, y * pixelDensity, pixelDensity, pixelDensity);
+            }
         }
     }
 }
